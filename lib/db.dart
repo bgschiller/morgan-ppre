@@ -35,7 +35,12 @@ class DiaryEntry {
     , afternoonSnack = Meal.fromJson(jsonDecode(json['afternoon_snack']))
     , dinner = Meal.fromJson(jsonDecode(json['dinner']))
     , eveningSnack = Meal.fromJson(jsonDecode(json['evening_snack']))
-    , exercises = jsonDecode(json['exercises']).map((e) => Exercise.fromJson(e));
+    , exercises = []
+  {
+    Iterable lst = jsonDecode(json['exercises']);
+    List<Exercise> exers = lst.map<Exercise>((e) => Exercise.fromJson(e)).toList();
+    exercises = exers;
+  }
 
   Map<String, dynamic> toMap() {
     log('inside DiaryEntry.toMap()');
@@ -132,7 +137,6 @@ class Exercise {
 
 Future<Database> getDb() async {
   var dbPath = join(await getDatabasesPath(), 'food_diary.db');
-  await deleteDatabase(dbPath);
   return openDatabase(
     dbPath,
     onCreate: (db, version) {
