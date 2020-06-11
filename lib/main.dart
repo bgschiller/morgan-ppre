@@ -1,3 +1,5 @@
+import 'package:morgan_ppre/exercise.dart';
+import 'package:morgan_ppre/weekly_log.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -84,7 +86,38 @@ class MyHomePage extends StatelessWidget {
                   })
                 )),
               ],
-            ))
+            )),
+            Container(
+              margin: EdgeInsets.all(20),
+              child: Row(
+                children: <Widget>[
+                  FlatButton(
+                    child: Row(children: [
+                      Icon(Icons.show_chart, color: Colors.white),
+                      Container(child: Text("Weekly Log"), margin: EdgeInsets.only(left: 10)),
+                    ]),
+                    textColor: Colors.white,
+                    color: Colors.teal,
+                    onPressed: () {
+                      Navigator.push(context, CupertinoPageRoute(builder: (context) => WeeklyLogPage()));
+                    },
+                  ),
+                  Spacer(),
+                  FlatButton(
+                    child: Row(children: [
+                      Icon(Icons.star, color: Colors.white),
+                      Container(child: Text("Exercise"), margin: EdgeInsets.only(left: 10)),
+                    ]),
+                    textColor: Colors.white,
+                    color: Colors.deepPurple,
+                    onPressed: () {
+                      Navigator.push(
+                          context,
+                          CupertinoPageRoute(
+                              builder: (context) => ExercisePage()));
+                    },
+                  )
+            ]))
           ],
         ),
       ),

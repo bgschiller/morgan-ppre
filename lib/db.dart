@@ -1,11 +1,26 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:morgan_ppre/debounce.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
+
+class PastEntry {
+  final String day;
+  DiaryEntry entry;
+  PastEntry({ @required this.day, this.entry });
+
+  PastEntry.fromJson(Map<String, dynamic> json)
+    : day = json['past_day']
+  {
+    if (json['num_glasses_of_water']) {
+      entry = DiaryEntry.fromJson(json);
+    } else {
+      entry = null;
+    }
+  }
+}
 
 class DiaryEntry {
   final String day;
@@ -17,7 +32,7 @@ class DiaryEntry {
   Meal dinner;
   Meal eveningSnack;
 
-  List<Exercise> exercises;
+  String exercises;
 
   DiaryEntry({this.day, this.numGlassesOfWater})
   : breakfast = Meal('breakfast')
@@ -25,7 +40,7 @@ class DiaryEntry {
   , afternoonSnack = Meal('afternoon_snack')
   , dinner = Meal('dinner')
   , eveningSnack = Meal('evening_snack')
-  , exercises = [];
+  , exercises = '';
 
   DiaryEntry.fromJson(Map<String, dynamic> json)
     : day = json['day']
@@ -35,17 +50,9 @@ class DiaryEntry {
     , afternoonSnack = Meal.fromJson(jsonDecode(json['afternoon_snack']))
     , dinner = Meal.fromJson(jsonDecode(json['dinner']))
     , eveningSnack = Meal.fromJson(jsonDecode(json['evening_snack']))
-    , exercises = []
-  {
-    Iterable lst = jsonDecode(json['exercises']);
-    List<Exercise> exers = lst.map<Exercise>((e) => Exercise.fromJson(e)).toList();
-    exercises = exers;
-  }
+    , exercises = json['exercises'];
 
   Map<String, dynamic> toMap() {
-    log('inside DiaryEntry.toMap()');
-    log('numGlassesOfWater is ' + numGlassesOfWater.toString());
-    log('jsonEncode(exercises) is ' + jsonEncode(exercises.map((e) => e.toMap()).toList()));
     return {
       'day': day,
       'num_glasses_of_water': numGlassesOfWater,
@@ -54,7 +61,7 @@ class DiaryEntry {
       'afternoon_snack': jsonEncode(afternoonSnack.toMap()),
       'dinner': jsonEncode(dinner.toMap()),
       'evening_snack': jsonEncode(eveningSnack.toMap()),
-      'exercises':  jsonEncode(exercises.map((e) => e.toMap()).toList())
+      'exercises':  exercises,
     };
   }
 
@@ -112,26 +119,15 @@ class Meal {
     if (fats != null) this.fats = fats;
     if (notes != null) this.notes = notes;
   }
-}
 
-class Exercise {
-  final String activity;
-  final String reps;
-  final String time;
-
-  Exercise({this.activity, this.reps, this.time});
-
-  Exercise.fromJson(Map<String, dynamic> json)
-    : activity = json['activity']
-    , reps = json['reps']
-    , time = json['time'];
-
-  Map<String, dynamic> toMap() {
-    return {
-      'activity': activity,
-      'reps': reps,
-      'time': time,
-    };
+  int operator[](String key) {
+    return (
+      key == 'protein' ? protein :
+      key == 'grains' ? grains :
+      key == 'produce' ? produce :
+      key == 'fats' ? fats :
+      null
+    );
   }
 }
 
@@ -164,10 +160,9 @@ Future<void> upsertEntry(Database db, DiaryEntry diary) async {
 }
 
 Future<DiaryEntry> getTodaysEntry(Database db) async {
-  log('db is ' + db.toString());
   return db.rawQuery('''
     SELECT * from diary_entries
-    WHERE day = DATE('now')
+    WHERE day = DATE('now', 'localtime')
   ''')
   .then((ds) {
     if (ds.length == 0) {
@@ -179,29 +174,184 @@ Future<DiaryEntry> getTodaysEntry(Database db) async {
   });
 }
 
-Future<List<DiaryEntry>> lastSevenDays(Database db) async {
+Future<List<PastEntry>> getLastSevenDays(Database db) async {
   return db.rawQuery('''
-    SELECT * FROM diary_entries
-    WHERE day > DATE('now', '-7 day')
-      AND day < DATE('now')
-  ''').then((ds) => ds.map((d) => DiaryEntry.fromJson(d)).toList());
+  WITH RECURSIVE last_seven(ix, past_day) AS (
+    SELECT -1, DATE('now', 'localtime', '-1 day')
+   UNION ALL
+    SELECT ix - 1, DATE('now', 'localtime', (ix - 1) || ' day')
+    WHERE ix - 1 > -8
+  )
+  SELECT past_day, de.*
+  FROM last_seven ls
+  LEFT JOIN diary_entry de
+  ON (ls.past_day = de.day)
+  ''').then((ds) => ds.map((d) => PastEntry.fromJson(d)).toList());
 }
 
 
 class MealModel extends ChangeNotifier {
   Database _db;
   MealModel() {
-    getDb()
-    .then((db) {
-      _db = db;
-      return getTodaysEntry(db);
-    })
-    .then((ntry) {
-      entry = ntry;
-      notifyListeners(skipSave: true);
-    });
+    var dbp = getDb();
+    dbp
+      .then((db) {
+        _db = db;
+      });
+    dbp
+      .then(getTodaysEntry)
+      .then((ntry) {
+        entry = ntry;
+        notifyListeners(skipSave: true);
+      });
+    dbp
+      .then(getLastSevenDays)
+      .then((days) {
+        lastSevenDays = days;
+      });
   }
   DiaryEntry entry;
+  List<PastEntry> lastSevenDays = [
+    PastEntry(day: '2020-06-09', entry: DiaryEntry.fromJson({
+      'day': '2020-06-09',
+      'num_glasses_of_water': 8,
+      'breakfast': '''{
+        "name": "breakfast",
+        "protein": 3,
+        "grains": 2,
+        "produce": 1,
+        "fats": 1,
+        "notes": ""
+      }''',
+      "lunch": '''{
+        "name": "lunch",
+        "protein": 2,
+        "grains": 4,
+        "produce": 2,
+        "fats": 2,
+        "notes": ""
+      }''',
+      "afternoon_snack": '''{
+        "name": "afternoon_snack",
+        "protein": 1,
+        "grains": 2,
+        "produce": 1,
+        "fats": 0,
+        "notes": ""
+      }''',
+      "dinner": '''{
+        "name": "dinner",
+        "protein": 3,
+        "grains": 2,
+        "produce": 2,
+        "fats": 1,
+        "notes": ""
+      }''',
+      "evening_snack": '''{
+        "name": "evening_snack",
+        "protein": 3,
+        "grains": 2,
+        "produce": 1,
+        "fats": 1,
+        "notes": ""
+      }''',
+      'exercises': 'nope',
+    })
+    ),
+    PastEntry(day: '2020-06-08', entry: DiaryEntry.fromJson({
+      'day': '2020-06-08',
+      'num_glasses_of_water': 8,
+      'breakfast': '''{
+        "name": "breakfast",
+        "protein": 2,
+        "grains": 2,
+        "produce": 2,
+        "fats": 0,
+        "notes": ""
+      }''',
+      "lunch": '''{
+        "name": "lunch",
+        "protein": 1,
+        "grains": 0,
+        "produce": 2,
+        "fats": 1,
+        "notes": ""
+      }''',
+      "afternoon_snack": '''{
+        "name": "afternoon_snack",
+        "protein": 0,
+        "grains": 0,
+        "produce": 0,
+        "fats": 1,
+        "notes": ""
+      }''',
+      "dinner": '''{
+        "name": "dinner",
+        "protein": 2,
+        "grains": 1,
+        "produce": 0,
+        "fats": 1,
+        "notes": ""
+      }''',
+      "evening_snack": '''{
+        "name": "evening_snack",
+        "protein": 3,
+        "grains": 2,
+        "produce": 1,
+        "fats": 1,
+        "notes": ""
+      }''',
+      'exercises': '',
+    })
+    ),
+    PastEntry(day: '2020-06-07', entry: null),
+    PastEntry(day: '2020-06-06', entry: DiaryEntry.fromJson({
+      'day': '2020-06-06',
+      'num_glasses_of_water': 5,
+      'breakfast': '''{
+        "name": "breakfast",
+        "protein": 1,
+        "grains": 2,
+        "produce": 2,
+        "fats": 1,
+        "notes": ""
+      }''',
+      "lunch": '''{
+        "name": "lunch",
+        "protein": 1,
+        "grains": 0,
+        "produce": 1,
+        "fats": 1,
+        "notes": ""
+      }''',
+      "afternoon_snack": '''{
+        "name": "afternoon_snack",
+        "protein": 0,
+        "grains": 2,
+        "produce": 0,
+        "fats": 1,
+        "notes": ""
+      }''',
+      "dinner": '''{
+        "name": "dinner",
+        "protein": 2,
+        "grains": 1,
+        "produce": 0,
+        "fats": 1,
+        "notes": ""
+      }''',
+      "evening_snack": '''{
+        "name": "evening_snack",
+        "protein": 3,
+        "grains": 2,
+        "produce": 1,
+        "fats": 1,
+        "notes": ""
+      }''',
+      'exercises': 'yep',
+    })
+    )
+  ];
 
   void notifyListeners({ bool skipSave = false }) {
     super.notifyListeners();
@@ -218,9 +368,12 @@ class MealModel extends ChangeNotifier {
   }
 
   void update(String mealName, { int protein, int grains, int produce, int fats, String notes }) {
-    log('mealName ' + mealName);
-    log('entry ' + entry[mealName].toString());
     entry[mealName].update(protein: protein, grains: grains, produce: produce, fats: fats, notes: notes);
+    notifyListeners();
+  }
+
+  void setExercise(String exercise) {
+    entry.exercises = exercise;
     notifyListeners();
   }
 }

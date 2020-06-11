@@ -24,6 +24,16 @@ class MealPlan {
     @required this.produce,
     @required this.fats,
   });
+
+  NutritionalRqmt operator[](String key) {
+    return (
+      key == 'protein' ? protein :
+      key == 'grains' ? grains :
+      key == 'produce' ? produce :
+      key == 'fats' ? fats :
+      null
+    );
+  }
 }
 
 class MealSpec {
@@ -84,9 +94,6 @@ var mealSpecs = [
         fats: NutritionalRqmt(needed: 0, optional: 1),
       )),
 ];
-
-typedef void UpdateMeal(
-    {int protein, int grains, int produce, int fats, String notes});
 
 class MealButton extends StatelessWidget {
   MealButton({@required this.mealSpec});
