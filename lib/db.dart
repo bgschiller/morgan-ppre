@@ -184,7 +184,7 @@ Future<List<PastEntry>> getLastSevenDays(Database db) async {
   )
   SELECT past_day, de.*
   FROM last_seven ls
-  LEFT JOIN diary_entry de
+  LEFT JOIN diary_entries de
   ON (ls.past_day = de.day)
   ''').then((ds) => ds.map((d) => PastEntry.fromJson(d)).toList());
 }
@@ -204,11 +204,11 @@ class MealModel extends ChangeNotifier {
         entry = ntry;
         notifyListeners(skipSave: true);
       });
-    dbp
-      .then(getLastSevenDays)
-      .then((days) {
-        lastSevenDays = days;
-      });
+    // dbp
+    //   .then(getLastSevenDays)
+    //   .then((days) {
+    //     lastSevenDays = days;
+    //   });
   }
   DiaryEntry entry;
   List<PastEntry> lastSevenDays = [
