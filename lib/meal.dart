@@ -50,13 +50,23 @@ class MealSpec {
 var mealSpecs = [
   MealSpec(
       name: "Breakfast",
-      color: Colors.orange,
+      color: Colors.pink,
       plan: MealPlan(
         protein: NutritionalRqmt(needed: 2, optional: 1),
         produce: NutritionalRqmt(needed: 1, optional: 0),
         grains: NutritionalRqmt(needed: 2, optional: 0),
         fats: NutritionalRqmt(needed: 2, optional: 0),
       )),
+  MealSpec(
+      name: "Morning Snack",
+      color: Colors.orange,
+      plan: MealPlan(
+        protein: NutritionalRqmt(needed: 1, optional: 0),
+        fats: NutritionalRqmt(needed: 1, optional: 0),
+        produce: NutritionalRqmt(needed: 1, optional: 0),
+        grains: NutritionalRqmt(needed: 0, optional: 0),
+      )
+  ),
   MealSpec(
       name: "Lunch",
       color: Colors.red,

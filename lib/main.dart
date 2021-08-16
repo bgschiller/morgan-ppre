@@ -43,11 +43,11 @@ class MyHomePage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Container(
-              margin: EdgeInsets.all(20),
+              margin: EdgeInsets.all(15),
               child: Text(
               'Planned. Purposeful. Portioned. Permission.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             )),
             Expanded(child:Row(
               children: <Widget>[
@@ -60,7 +60,7 @@ class MyHomePage extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: mealSpecs.map((m) => Container(
-                        margin: EdgeInsets.only(top: 10),
+                        margin: m.name == "Breakfast" ? EdgeInsets.only(top: 0) : EdgeInsets.only(top: 10),
                         child: MealButton(mealSpec: m))).toList()
                       )
                 )),
