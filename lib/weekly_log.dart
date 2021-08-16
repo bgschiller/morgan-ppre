@@ -22,7 +22,7 @@ String dailySummary(String foodGroup, PastEntry pe) {
   }
   if (actual >= expected) return '💯';
   if (actual == 0) return '0';
-  var pct = (actual.toDouble() * 100/ expected).round();
+  var pct = (actual.toDouble() * 100 / expected).round();
   return '$pct%';
 }
 
@@ -44,44 +44,77 @@ class WeeklyLogPage extends StatelessWidget {
   TableRow averageRow(List<PastEntry> days) {
     return TableRow(children: [
       Spacer(), // day label
-
     ]);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Weekly Log"), backgroundColor: Colors.teal),
-      body: Consumer<MealModel>(
-        builder: (context, meal, child) => Container(
-          padding: EdgeInsets.all(15),
-          child: Table(
-            children: [
-              TableRow(children: [
-                Spacer(), // day label
-                Container(child: Transform.rotate(angle: textAngle, child: Text("Protein", overflow: TextOverflow.visible, maxLines: 1,)), padding: EdgeInsets.only(top: 30, bottom: 30)),
-                Container(child: Transform.rotate(angle: textAngle, child: Text("Grains", overflow: TextOverflow.visible, maxLines: 1,)), padding: EdgeInsets.only(top: 30, bottom: 30)),
-                Container(child: Transform.rotate(angle: textAngle, child: Text("Produce", overflow: TextOverflow.visible, maxLines: 1,)), padding: EdgeInsets.only(top: 30, bottom: 30)),
-                Container(child: Transform.rotate(angle: textAngle, child: Text("Fats", overflow: TextOverflow.visible, maxLines: 1,)), padding: EdgeInsets.only(top: 30, bottom: 30)),
-                Spacer(), // Exercise icon, or empty
-                Spacer(), // Water icon, or empty
-              ]),
-              ...meal.lastSevenDays.map((day) {
-                return TableRow(children: [
-                  Container(child: Text(dayOfWeek(day.day)), padding: EdgeInsets.only(top: 10)),
-                  Text(dailySummary('protein', day)),
-                  Text(dailySummary('grains', day)),
-                  Text(dailySummary('produce', day)),
-                  Text(dailySummary('fats', day)),
-                  ((day?.entry?.exercises ?? '') != '') ? Icon(Icons.star, color: Colors.deepPurple) : Spacer(),
-                  ((day?.entry?.numGlassesOfWater ?? 0) >= 8) ? Icon(PpreIcons.water_drop, color: Colors.blue) : Spacer(),
-                ]);
-              }),
-              // averageRow(meal.lastSevenDays),
-            ]
-          )
-        )
-      )
-    );
+        appBar: AppBar(title: Text("Weekly Log"), backgroundColor: Colors.teal),
+        body: Consumer<MealModel>(
+            builder: (context, meal, child) => Container(
+                padding: EdgeInsets.all(15),
+                child: Table(
+                    defaultVerticalAlignment: TableCellVerticalAlignment.top,
+                    children: [
+                      TableRow(children: [
+                        SizedBox(height: 40),
+                        SizedBox(height: 40),
+                        SizedBox(height: 40),
+                        SizedBox(height: 40),
+                        SizedBox(height: 40),
+                        SizedBox(height: 40),
+                        SizedBox(height: 40),
+                      ]),
+                      TableRow(children: [
+                        TableCell(child: SizedBox(height: 60)), // day label
+                        Transform.rotate(
+                            angle: textAngle,
+                            child: Text(
+                              "Protein",
+                              overflow: TextOverflow.visible,
+                              maxLines: 1,
+                            )),
+                        Transform.rotate(
+                            angle: textAngle,
+                            child: Text(
+                              "Grains",
+                              overflow: TextOverflow.visible,
+                              maxLines: 1,
+                            )),
+                        Transform.rotate(
+                            angle: textAngle,
+                            child: Text(
+                              "Produce",
+                              overflow: TextOverflow.visible,
+                              maxLines: 1,
+                            )),
+                        Transform.rotate(
+                            angle: textAngle,
+                            child: Text(
+                              "Fats",
+                              overflow: TextOverflow.visible,
+                              maxLines: 1,
+                            )),
+                        Spacer(), // Exercise icon, or empty
+                        Spacer(), // Water icon, or empty
+                      ]),
+                      ...meal.lastSevenDays.map((day) {
+                        return TableRow(children: [
+                          SizedBox(child: Text(dayOfWeek(day.day)), height: 50),
+                          Text(dailySummary('protein', day)),
+                          Text(dailySummary('grains', day)),
+                          Text(dailySummary('produce', day)),
+                          Text(dailySummary('fats', day)),
+                          ((day?.entry?.exercises ?? '') != '')
+                              ? Icon(Icons.star, color: Colors.deepPurple)
+                              : Spacer(),
+                          ((day?.entry?.numGlassesOfWater ?? 0) >= 8)
+                              ? Icon(PpreIcons.water_drop, color: Colors.blue)
+                              : Spacer(),
+                        ]);
+                      }),
+                      // averageRow(meal.lastSevenDays),
+                    ]))));
   }
 }

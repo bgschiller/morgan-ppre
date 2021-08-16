@@ -1,5 +1,6 @@
 import 'package:morgan_ppre/exercise.dart';
 import 'package:morgan_ppre/weekly_log.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -8,10 +9,11 @@ import 'package:morgan_ppre/meal.dart';
 import 'package:morgan_ppre/ppre_icons_icons.dart';
 
 void main() {
-  runApp(ChangeNotifierProvider(
-    create: (context) => MealModel(),
-    child: MyApp()
-  ));
+  WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setPreferredOrientations(
+      [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
+  runApp(
+      ChangeNotifierProvider(create: (context) => MealModel(), child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -29,8 +31,6 @@ class MyApp extends StatelessWidget {
   }
 }
 
-
-
 class MyHomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -43,70 +43,85 @@ class MyHomePage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Container(
-              margin: EdgeInsets.all(15),
-              child: Text(
-              'Planned. Purposeful. Portioned. Permission.',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            )),
-            Expanded(child:Row(
+                margin: EdgeInsets.all(15),
+                child: Text(
+                  'Planned. Purposeful. Portioned. Permission.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                )),
+            Expanded(
+                child: Row(
               children: <Widget>[
                 Container(
-                  margin: EdgeInsets.all(20),
-                  alignment: Alignment.centerLeft,
-                  child: ButtonTheme(
-                    minWidth: 250,
-                    height: 70,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: mealSpecs.map((m) => Container(
-                        margin: m.name == "Breakfast" ? EdgeInsets.only(top: 0) : EdgeInsets.only(top: 10),
-                        child: MealButton(mealSpec: m))).toList()
-                      )
-                )),
+                    margin: EdgeInsets.all(20),
+                    alignment: Alignment.centerLeft,
+                    child: ButtonTheme(
+                        minWidth: 250,
+                        height: 70,
+                        child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: mealSpecs
+                                .map((m) => Container(
+                                    margin: m.name == "Breakfast"
+                                        ? EdgeInsets.only(top: 0)
+                                        : EdgeInsets.only(top: 10),
+                                    child: MealButton(mealSpec: m)))
+                                .toList()))),
                 Consumer<MealModel>(
-                  builder: (context, meal, child) => Column(children: List.generate(8, (ix) {
-                    var dropColor = ix < (meal.entry?.numGlassesOfWater ?? 0) ? Colors.blue : Colors.grey;
-                    var onPress = () {
-                      if (ix < meal.entry.numGlassesOfWater) {
-                        meal.updateNumGlassesOfWater(meal.entry.numGlassesOfWater - 1);
-                      } else {
-                        meal.updateNumGlassesOfWater(meal.entry.numGlassesOfWater + 1);
-                      }
-                    };
-                    return Container(
-                      alignment: AlignmentDirectional.topEnd,
-                      margin: EdgeInsets.only(top: 10, left: 12),
-                      child: IconButton(
-                        icon: Icon(PpreIcons.water_drop, color: dropColor, size: 40),
-                        onPressed: onPress,
-                        padding: EdgeInsets.only(left: 4, top: 4),
-                        alignment: Alignment.topLeft,
-                      ));
-                  })
-                )),
+                    builder: (context, meal, child) => Column(
+                            children: List.generate(8, (ix) {
+                          var dropColor =
+                              ix < (meal.entry?.numGlassesOfWater ?? 0)
+                                  ? Colors.blue
+                                  : Colors.grey;
+                          var onPress = () {
+                            if (ix < meal.entry.numGlassesOfWater) {
+                              meal.updateNumGlassesOfWater(
+                                  meal.entry.numGlassesOfWater - 1);
+                            } else {
+                              meal.updateNumGlassesOfWater(
+                                  meal.entry.numGlassesOfWater + 1);
+                            }
+                          };
+                          return Container(
+                              alignment: AlignmentDirectional.topEnd,
+                              margin: EdgeInsets.only(top: 10, left: 12),
+                              child: IconButton(
+                                icon: Icon(PpreIcons.water_drop,
+                                    color: dropColor, size: 40),
+                                onPressed: onPress,
+                                padding: EdgeInsets.only(left: 4, top: 4),
+                                alignment: Alignment.topLeft,
+                              ));
+                        }))),
               ],
             )),
             Container(
-              margin: EdgeInsets.all(20),
-              child: Row(
-                children: <Widget>[
+                margin: EdgeInsets.all(20),
+                child: Row(children: <Widget>[
                   FlatButton(
                     child: Row(children: [
                       Icon(Icons.show_chart, color: Colors.white),
-                      Container(child: Text("Weekly Log"), margin: EdgeInsets.only(left: 10)),
+                      Container(
+                          child: Text("Weekly Log"),
+                          margin: EdgeInsets.only(left: 10)),
                     ]),
                     textColor: Colors.white,
                     color: Colors.teal,
                     onPressed: () {
-                      Navigator.push(context, CupertinoPageRoute(builder: (context) => WeeklyLogPage()));
+                      Navigator.push(
+                          context,
+                          CupertinoPageRoute(
+                              builder: (context) => WeeklyLogPage()));
                     },
                   ),
                   Spacer(),
                   FlatButton(
                     child: Row(children: [
                       Icon(Icons.star, color: Colors.white),
-                      Container(child: Text("Exercise"), margin: EdgeInsets.only(left: 10)),
+                      Container(
+                          child: Text("Exercise"),
+                          margin: EdgeInsets.only(left: 10)),
                     ]),
                     textColor: Colors.white,
                     color: Colors.deepPurple,
@@ -117,7 +132,7 @@ class MyHomePage extends StatelessWidget {
                               builder: (context) => ExercisePage()));
                     },
                   )
-            ]))
+                ]))
           ],
         ),
       ),
