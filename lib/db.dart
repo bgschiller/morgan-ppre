@@ -6,20 +6,6 @@ import 'package:morgan_ppre/debounce.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
-class PastEntry {
-  final String day;
-  DiaryEntry entry;
-  PastEntry({@required this.day, this.entry});
-
-  PastEntry.fromJson(Map<String, dynamic> json) : day = json['past_day'] {
-    if (json['num_glasses_of_water'] != null) {
-      entry = DiaryEntry.fromJson(json);
-    } else {
-      entry = null;
-    }
-  }
-}
-
 class DiaryEntry {
   final String day;
   int numGlassesOfWater;
@@ -33,7 +19,7 @@ class DiaryEntry {
 
   String exercises;
 
-  DiaryEntry({this.day, this.numGlassesOfWater})
+  DiaryEntry({this.day = '', this.numGlassesOfWater = 0})
       : breakfast = Meal('breakfast'),
         morningSnack = Meal('morning_snack'),
         lunch = Meal('lunch'),
@@ -87,56 +73,78 @@ class DiaryEntry {
 class Meal {
   String name;
   int protein;
-  int grains;
+  int starch;
   int produce;
+  int veg;
+  int fruitOrVeg;
+  int dairy;
   int fats;
-
-  String notes;
 
   Meal(this.name)
       : protein = 0,
-        grains = 0,
+        starch = 0,
         produce = 0,
         fats = 0,
-        notes = "";
+        veg = 0,
+        fruitOrVeg = 0,
+        dairy = 0;
 
   Meal.fromJson(Map<String, dynamic> json)
       : name = json['name'],
         protein = json['protein'],
-        grains = json['grains'],
+        starch = json['starch'],
         produce = json['produce'],
         fats = json['fats'],
-        notes = json['notes'];
+        veg = json['veg'],
+        fruitOrVeg = json['fruitOrVeg'],
+        dairy = json['dairy'];
 
   Map<String, dynamic> toMap() {
     return {
       'name': name,
       'protein': protein,
-      'grains': grains,
+      'starch': starch,
       'produce': produce,
       'fats': fats,
-      'notes': notes,
+      'veg': veg,
+      'fruitOrVeg': fruitOrVeg,
+      'dairy': dairy,
     };
   }
 
-  void update({int protein, int grains, int produce, int fats, String notes}) {
+  void update(
+      {int protein,
+      int starch,
+      int produce,
+      int fats,
+      int veg,
+      int fruitOrVeg,
+      int dairy}) {
     if (protein != null) this.protein = protein;
-    if (grains != null) this.grains = grains;
+    if (starch != null) this.starch = starch;
     if (produce != null) this.produce = produce;
     if (fats != null) this.fats = fats;
-    if (notes != null) this.notes = notes;
+    if (veg != null) this.veg = veg;
+    if (fruitOrVeg != null) this.fruitOrVeg = fruitOrVeg;
+    if (dairy != null) this.dairy = dairy;
   }
 
   int operator [](String key) {
     return (key == 'protein'
         ? protein
-        : key == 'grains'
-            ? grains
+        : key == 'starch'
+            ? starch
             : key == 'produce'
                 ? produce
                 : key == 'fats'
                     ? fats
-                    : null);
+                    : key == 'veg'
+                        ? veg
+                        : key == 'fruitOrVeg'
+                            ? fruitOrVeg
+                            : key == 'dairy'
+                                ? dairy
+                                : 0);
   }
 }
 
@@ -184,22 +192,6 @@ Future<DiaryEntry> getTodaysEntry(Database db) async {
   });
 }
 
-Future<List<PastEntry>> getLastSevenDays(Database db) async {
-  return db.rawQuery('''
-  WITH RECURSIVE last_seven(ix, past_day) AS (
-    SELECT -1, DATE('now', 'localtime', '-1 day')
-   UNION ALL
-    SELECT ix - 1, DATE('now', 'localtime', (ix - 1) || ' day')
-    FROM last_seven
-    WHERE ix - 1 > -8
-  )
-  SELECT past_day, de.*
-  FROM last_seven ls
-  LEFT JOIN diary_entries de
-  ON (ls.past_day = de.day)
-  ''').then((ds) => ds.map((d) => PastEntry.fromJson(d)).toList());
-}
-
 class MealModel extends ChangeNotifier {
   Database _db;
   MealModel() {
@@ -211,179 +203,8 @@ class MealModel extends ChangeNotifier {
       entry = ntry;
       notifyListeners(skipSave: true);
     });
-    dbp.then(getLastSevenDays).then((days) {
-      lastSevenDays = days;
-    });
   }
   DiaryEntry entry;
-  List<PastEntry> lastSevenDays = [
-    PastEntry(
-        day: '2020-06-09',
-        entry: DiaryEntry.fromJson({
-          'day': '2020-06-09',
-          'num_glasses_of_water': 8,
-          'breakfast': '''{
-        "name": "breakfast",
-        "protein": 3,
-        "grains": 2,
-        "produce": 1,
-        "fats": 1,
-        "notes": ""
-      }''',
-          "morning_snack": '''{
-        "name": "morning_snack",
-        "protein": 1,
-        "grains": 2,
-        "produce": 1,
-        "fats": 0,
-        "notes": ""
-      }''',
-          "lunch": '''{
-        "name": "lunch",
-        "protein": 2,
-        "grains": 4,
-        "produce": 2,
-        "fats": 2,
-        "notes": ""
-      }''',
-          "afternoon_snack": '''{
-        "name": "afternoon_snack",
-        "protein": 1,
-        "grains": 2,
-        "produce": 1,
-        "fats": 0,
-        "notes": ""
-      }''',
-          "dinner": '''{
-        "name": "dinner",
-        "protein": 3,
-        "grains": 2,
-        "produce": 2,
-        "fats": 1,
-        "notes": ""
-      }''',
-          "evening_snack": '''{
-        "name": "evening_snack",
-        "protein": 3,
-        "grains": 2,
-        "produce": 1,
-        "fats": 1,
-        "notes": ""
-      }''',
-          'exercises': 'nope',
-        })),
-    PastEntry(
-        day: '2020-06-08',
-        entry: DiaryEntry.fromJson({
-          'day': '2020-06-08',
-          'num_glasses_of_water': 8,
-          'breakfast': '''{
-        "name": "breakfast",
-        "protein": 2,
-        "grains": 2,
-        "produce": 2,
-        "fats": 0,
-        "notes": ""
-      }''',
-          "morning_snack": '''{
-        "name": "morning_snack",
-        "protein": 1,
-        "grains": 2,
-        "produce": 1,
-        "fats": 0,
-        "notes": ""
-      }''',
-          "lunch": '''{
-        "name": "lunch",
-        "protein": 1,
-        "grains": 0,
-        "produce": 2,
-        "fats": 1,
-        "notes": ""
-      }''',
-          "afternoon_snack": '''{
-        "name": "afternoon_snack",
-        "protein": 0,
-        "grains": 0,
-        "produce": 0,
-        "fats": 1,
-        "notes": ""
-      }''',
-          "dinner": '''{
-        "name": "dinner",
-        "protein": 2,
-        "grains": 1,
-        "produce": 0,
-        "fats": 1,
-        "notes": ""
-      }''',
-          "evening_snack": '''{
-        "name": "evening_snack",
-        "protein": 3,
-        "grains": 2,
-        "produce": 1,
-        "fats": 1,
-        "notes": ""
-      }''',
-          'exercises': '',
-        })),
-    PastEntry(day: '2020-06-07', entry: null),
-    PastEntry(
-        day: '2020-06-06',
-        entry: DiaryEntry.fromJson({
-          'day': '2020-06-06',
-          'num_glasses_of_water': 5,
-          'breakfast': '''{
-        "name": "breakfast",
-        "protein": 1,
-        "grains": 2,
-        "produce": 2,
-        "fats": 1,
-        "notes": ""
-      }''',
-          "morning_snack": '''{
-        "name": "morning_snack",
-        "protein": 1,
-        "grains": 2,
-        "produce": 1,
-        "fats": 0,
-        "notes": ""
-      }''',
-          "lunch": '''{
-        "name": "lunch",
-        "protein": 1,
-        "grains": 0,
-        "produce": 1,
-        "fats": 1,
-        "notes": ""
-      }''',
-          "afternoon_snack": '''{
-        "name": "afternoon_snack",
-        "protein": 0,
-        "grains": 2,
-        "produce": 0,
-        "fats": 1,
-        "notes": ""
-      }''',
-          "dinner": '''{
-        "name": "dinner",
-        "protein": 2,
-        "grains": 1,
-        "produce": 0,
-        "fats": 1,
-        "notes": ""
-      }''',
-          "evening_snack": '''{
-        "name": "evening_snack",
-        "protein": 3,
-        "grains": 2,
-        "produce": 1,
-        "fats": 1,
-        "notes": ""
-      }''',
-          'exercises': 'yep',
-        }))
-  ];
 
   void notifyListeners({bool skipSave = false}) {
     super.notifyListeners();
@@ -399,14 +220,15 @@ class MealModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void update(String mealName,
-      {int protein, int grains, int produce, int fats, String notes}) {
+  void update(String mealName, Map<String, int> kwargs) {
     entry[mealName].update(
-        protein: protein,
-        grains: grains,
-        produce: produce,
-        fats: fats,
-        notes: notes);
+        protein: kwargs['protein'],
+        starch: kwargs['starch'],
+        produce: kwargs['produce'],
+        fats: kwargs['fats'],
+        veg: kwargs['veg'],
+        fruitOrVeg: kwargs['fruitOrVeg'],
+        dairy: kwargs['dairy']);
     notifyListeners();
   }
 

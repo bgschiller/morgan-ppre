@@ -1,5 +1,4 @@
 import 'package:morgan_ppre/exercise.dart';
-import 'package:morgan_ppre/weekly_log.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/cupertino.dart';
@@ -67,54 +66,34 @@ class MyHomePage extends StatelessWidget {
                                         : EdgeInsets.only(top: 10),
                                     child: MealButton(mealSpec: m)))
                                 .toList()))),
-                Consumer<MealModel>(
-                    builder: (context, meal, child) => Column(
-                            children: List.generate(8, (ix) {
-                          var dropColor =
-                              ix < (meal.entry?.numGlassesOfWater ?? 0)
-                                  ? Colors.blue
-                                  : Colors.grey;
-                          var onPress = () {
-                            if (ix < meal.entry.numGlassesOfWater) {
-                              meal.updateNumGlassesOfWater(
-                                  meal.entry.numGlassesOfWater - 1);
-                            } else {
-                              meal.updateNumGlassesOfWater(
-                                  meal.entry.numGlassesOfWater + 1);
-                            }
-                          };
-                          return Container(
-                              alignment: AlignmentDirectional.topEnd,
-                              margin: EdgeInsets.only(top: 10, left: 12),
-                              child: IconButton(
-                                icon: Icon(PpreIcons.water_drop,
-                                    color: dropColor, size: 40),
-                                onPressed: onPress,
-                                padding: EdgeInsets.only(left: 4, top: 4),
-                                alignment: Alignment.topLeft,
-                              ));
-                        }))),
               ],
             )),
             Container(
                 margin: EdgeInsets.all(20),
                 child: Row(children: <Widget>[
-                  FlatButton(
-                    child: Row(children: [
-                      Icon(Icons.show_chart, color: Colors.white),
-                      Container(
-                          child: Text("Weekly Log"),
-                          margin: EdgeInsets.only(left: 10)),
-                    ]),
-                    textColor: Colors.white,
-                    color: Colors.teal,
-                    onPressed: () {
-                      Navigator.push(
-                          context,
-                          CupertinoPageRoute(
-                              builder: (context) => WeeklyLogPage()));
-                    },
-                  ),
+                  Consumer<MealModel>(
+                      builder: (context, meal, child) => Row(children: <Widget>[
+                            Container(
+                                padding: EdgeInsets.only(left: 7, top: 14),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  meal.entry != null
+                                      ? meal.entry.numGlassesOfWater.toString()
+                                      : '',
+                                  style: TextStyle(
+                                      color: Colors.blue, fontSize: 24),
+                                  textAlign: TextAlign.center,
+                                )),
+                            IconButton(
+                              icon: Icon(PpreIcons.water_drop,
+                                  color: Colors.blue, size: 40),
+                              onPressed: () {
+                                meal.updateNumGlassesOfWater(
+                                    (meal.entry.numGlassesOfWater + 1) % 13);
+                              },
+                              alignment: Alignment.topLeft,
+                            ),
+                          ])),
                   Spacer(),
                   FlatButton(
                     child: Row(children: [

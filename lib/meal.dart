@@ -8,31 +8,40 @@ import 'package:provider/provider.dart';
 
 class NutritionalRqmt {
   final int needed;
-  final int optional;
-  NutritionalRqmt({@required this.needed, @required this.optional});
+  final int optional = 0;
+  NutritionalRqmt({@required this.needed});
 }
 
 class MealPlan {
   final NutritionalRqmt protein;
-  final NutritionalRqmt grains;
-  final NutritionalRqmt produce;
+  final NutritionalRqmt starch;
+  final NutritionalRqmt veg;
+  final NutritionalRqmt fruitOrVeg;
   final NutritionalRqmt fats;
+  final NutritionalRqmt dairy;
 
-  MealPlan({
-    @required this.protein,
-    @required this.grains,
-    @required this.produce,
-    @required this.fats,
-  });
+  MealPlan(
+      {this.protein,
+      this.starch,
+      this.veg,
+      this.fruitOrVeg,
+      this.fats,
+      this.dairy});
 
-  NutritionalRqmt operator[](String key) {
-    return (
-      key == 'protein' ? protein :
-      key == 'grains' ? grains :
-      key == 'produce' ? produce :
-      key == 'fats' ? fats :
-      null
-    );
+  NutritionalRqmt operator [](String key) {
+    return (key == 'protein'
+        ? protein
+        : key == 'starch'
+            ? starch
+            : key == 'veg'
+                ? veg
+                : key == 'fruitOrVeg'
+                    ? fruitOrVeg
+                    : key == 'fats'
+                        ? fats
+                        : key == 'dairy'
+                            ? dairy
+                            : null);
   }
 }
 
@@ -52,56 +61,47 @@ var mealSpecs = [
       name: "Breakfast",
       color: Colors.pink,
       plan: MealPlan(
-        protein: NutritionalRqmt(needed: 2, optional: 1),
-        produce: NutritionalRqmt(needed: 1, optional: 0),
-        grains: NutritionalRqmt(needed: 2, optional: 0),
-        fats: NutritionalRqmt(needed: 2, optional: 0),
+        starch: NutritionalRqmt(needed: 3),
+        protein: NutritionalRqmt(needed: 3),
+        fats: NutritionalRqmt(needed: 1),
+        fruitOrVeg: NutritionalRqmt(needed: 1),
+        dairy: NutritionalRqmt(needed: 1),
       )),
   MealSpec(
       name: "Morning Snack",
       color: Colors.orange,
       plan: MealPlan(
-        protein: NutritionalRqmt(needed: 1, optional: 0),
-        fats: NutritionalRqmt(needed: 1, optional: 0),
-        produce: NutritionalRqmt(needed: 1, optional: 0),
-        grains: NutritionalRqmt(needed: 0, optional: 0),
-      )
-  ),
+        protein: NutritionalRqmt(needed: 1),
+        fats: NutritionalRqmt(needed: 1),
+        fruitOrVeg: NutritionalRqmt(needed: 1),
+      )),
   MealSpec(
       name: "Lunch",
       color: Colors.red,
       plan: MealPlan(
-        protein: NutritionalRqmt(needed: 3, optional: 1),
-        produce: NutritionalRqmt(needed: 1, optional: 1),
-        grains: NutritionalRqmt(needed: 2, optional: 0),
-        fats: NutritionalRqmt(needed: 2, optional: 1),
+        protein: NutritionalRqmt(needed: 3),
+        veg: NutritionalRqmt(needed: 2),
+        starch: NutritionalRqmt(needed: 3),
+        fats: NutritionalRqmt(needed: 2),
+        dairy: NutritionalRqmt(needed: 1),
       )),
   MealSpec(
       name: "Afternoon Snack",
       color: Colors.purple,
       plan: MealPlan(
-        protein: NutritionalRqmt(needed: 1, optional: 0),
-        produce: NutritionalRqmt(needed: 1, optional: 1),
-        grains: NutritionalRqmt(needed: 0, optional: 1),
-        fats: NutritionalRqmt(needed: 0, optional: 1),
+        protein: NutritionalRqmt(needed: 1),
+        fruitOrVeg: NutritionalRqmt(needed: 1),
+        dairy: NutritionalRqmt(needed: 1),
       )),
   MealSpec(
       name: "Dinner",
       color: Colors.green,
       plan: MealPlan(
-        protein: NutritionalRqmt(needed: 3, optional: 1),
-        produce: NutritionalRqmt(needed: 2, optional: 0),
-        grains: NutritionalRqmt(needed: 2, optional: 0),
-        fats: NutritionalRqmt(needed: 2, optional: 1),
-      )),
-  MealSpec(
-      name: "Evening Snack",
-      color: Colors.blue,
-      plan: MealPlan(
-        protein: NutritionalRqmt(needed: 0, optional: 1),
-        produce: NutritionalRqmt(needed: 0, optional: 1),
-        grains: NutritionalRqmt(needed: 0, optional: 1),
-        fats: NutritionalRqmt(needed: 0, optional: 1),
+        protein: NutritionalRqmt(needed: 3),
+        veg: NutritionalRqmt(needed: 2),
+        starch: NutritionalRqmt(needed: 3),
+        fats: NutritionalRqmt(needed: 1),
+        dairy: NutritionalRqmt(needed: 1),
       )),
 ];
 
@@ -143,58 +143,46 @@ class MealPage extends StatelessWidget {
               child: Consumer<MealModel>(
                   builder: (context, meal, child) => Center(
                           child: Column(
-                        children: <Widget>[
-                          ServingCheckboxRow(
-                              title: "Protein",
-                              counts: this.mealSpec.plan.protein,
-                              onChange: (int newCount) {
-                                meal.update(this.mealSpec.name,
-                                    protein: newCount);
-                              },
-                              color: this.mealSpec.color,
-                              value: meal.entry[this.mealSpec.name].protein),
-                          ServingCheckboxRow(
-                              title: "Grains",
-                              counts: this.mealSpec.plan.grains,
-                              onChange: (newCount) {
-                                meal.update(this.mealSpec.name,
-                                    grains: newCount);
-                              },
-                              color: this.mealSpec.color,
-                              value: meal.entry[this.mealSpec.name].grains),
-                          ServingCheckboxRow(
-                              title: "Produce",
-                              counts: this.mealSpec.plan.produce,
-                              onChange: (newCount) {
-                                meal.update(this.mealSpec.name,
-                                    produce: newCount);
-                              },
-                              color: this.mealSpec.color,
-                              value: meal.entry[this.mealSpec.name].produce),
-                          ServingCheckboxRow(
-                              title: "Fats",
-                              counts: this.mealSpec.plan.fats,
-                              onChange: (newCount) {
-                                meal.update(this.mealSpec.name, fats: newCount);
-                              },
-                              color: this.mealSpec.color,
-                              value: meal.entry[this.mealSpec.name].fats),
-                          Container(
-                            padding: EdgeInsets.all(10),
-                            child: TextFormField(
-                              initialValue: meal.entry[this.mealSpec.name].notes,
-                                decoration: InputDecoration(
-                                  border: OutlineInputBorder(),
-                                  labelText: "Notes",
-                                  labelStyle: TextStyle(),
-                                ),
-                                minLines: 2,
-                                maxLines: 5,
-                                onChanged: (String note) {
-                                  meal.update(this.mealSpec.name, notes: note);
-                                }),
-                          ),
-                        ],
+                        children: [
+                          {
+                            'title': 'Protein',
+                            'accessor': 'protein',
+                            'recs': """
+                  1oz poultry or beef
+                  2oz fish
+                  1oz most cheese
+                  ¼ cup ricotta or cottage cheese
+                  egg w/ yolk
+                  1-2 tbsp Peanut butter
+                  ½ cup tofu
+                  ½ patty veggie burger
+                            """
+                          },
+                          {'title': 'Starch', 'accessor': 'starch'},
+                          {'title': 'Veg', 'accessor': 'veg'},
+                          {'title': 'Fruit/Veg', 'accessor': 'fruitOrVeg'},
+                          {'title': 'Fats', 'accessor': 'fats'},
+                          {'title': 'Dairy', 'accessor': 'dairy'},
+                        ]
+                            .where((nutrient) =>
+                                this.mealSpec.plan[nutrient['accessor']] !=
+                                null)
+                            .map((nutrient) => ServingCheckboxRow(
+                                  recs: nutrient['recs'] ?? 'yolo',
+                                  title: nutrient['title'],
+                                  counts:
+                                      this.mealSpec.plan[nutrient['accessor']],
+                                  onChange: (int newCount) {
+                                    meal.update(this.mealSpec.name,
+                                        {nutrient['accessor']: newCount});
+                                  },
+                                  color: this.mealSpec.color,
+                                  value: meal.entry[this.mealSpec.name] != null
+                                      ? meal.entry[this.mealSpec.name]
+                                          [nutrient['accessor']]
+                                      : null,
+                                ))
+                            .toList(),
                       ))),
             )));
   }
@@ -204,12 +192,14 @@ typedef void CheckboxRowChanged(int i);
 
 class ServingCheckboxRow extends StatelessWidget {
   final String title;
+  final String recs;
   final NutritionalRqmt counts;
   final int value;
   final Color color;
   final CheckboxRowChanged onChange;
   ServingCheckboxRow(
       {@required this.title,
+      @required this.recs,
       @required this.counts,
       @required this.value,
       @required this.color,
@@ -224,7 +214,16 @@ class ServingCheckboxRow extends StatelessWidget {
           height: 30,
           margin: EdgeInsets.all(20),
           alignment: Alignment.centerLeft,
-          child: Text(this.title, style: TextStyle(fontSize: 20))),
+          child: GestureDetector(
+              child: Text(this.title, style: TextStyle(fontSize: 20)),
+              onLongPress: () {
+                showDialog(
+                    context: context,
+                    builder: (context) => Dialog(
+                        child: Container(
+                            padding: EdgeInsets.all(20),
+                            child: Text(this.recs))));
+              })),
       ...List.generate(this.counts.needed + this.counts.optional, (ix) {
         var optional = ix >= this.counts.needed;
         var colour = optional ? this.color.withAlpha(80) : this.color;
