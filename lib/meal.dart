@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:morgan_ppre/db.dart';
 import 'package:morgan_ppre/ppre_icons_icons.dart';
 import 'package:provider/provider.dart';
+import 'package:dedent/dedent.dart';
 
 class NutritionalRqmt {
   final int needed;
@@ -125,6 +126,64 @@ class MealButton extends StatelessWidget {
   }
 }
 
+class Nutrient {
+  final String title;
+  final String accessor;
+  final String recs;
+  Nutrient(
+      {@required this.title, @required this.accessor, @required String recs})
+      : recs = dedent(recs).trim();
+}
+
+var nutrients = [
+  Nutrient(title: 'Protein', accessor: 'protein', recs: """
+    • 1oz meat
+    • 2oz fish
+    • ½ cup beans
+    • 1oz cheese
+    • egg w/ yolk
+    • 1-2 tbsp Peanut butter
+    • ½ cup tofu
+    • ½ patty veggie burger
+    • 3 oz greek yogurt
+  """),
+  Nutrient(title: 'Starch', accessor: 'starch', recs: """
+    • ½ bagel
+    • 1 slice bread
+    • ½ english muffin
+    • 4" pancake
+    • small tortilla
+    • waffle
+    • ½ cup oatmeal, cereal, rice, pasta
+    • ½ cup beans, corn
+    • 1 cup winter squash
+  """),
+  Nutrient(title: 'Veg', accessor: 'veg', recs: """
+    • ½ cup cooked veggies
+    • 1 cup raw veggies
+  """),
+  Nutrient(title: 'Fruit/Veg', accessor: 'fruitOrVeg', recs: """
+    • ½ cup cooked veggies
+    • 1 cup raw veggies
+    • 1 apple, banana, pear
+    • 2 plums
+    • 1 cup berries, cut fruit
+    • 2 Tbsp raisins
+    • 3 dates
+  """),
+  Nutrient(title: 'Fats', accessor: 'fats', recs: """
+    • 2 Tbsp Avocado
+    • 2 Tbsp Peanut butter
+    • 1½ Tbsp Neufchatel
+    • 1 tsp butter
+  """),
+  Nutrient(title: 'Dairy', accessor: 'dairy', recs: """
+    • 1 cup milk
+    • 3 oz greek yogurt
+    • 1 oz cheese
+  """),
+];
+
 class MealPage extends StatelessWidget {
   MealPage({@required this.mealSpec});
   final MealSpec mealSpec;
@@ -143,43 +202,21 @@ class MealPage extends StatelessWidget {
               child: Consumer<MealModel>(
                   builder: (context, meal, child) => Center(
                           child: Column(
-                        children: [
-                          {
-                            'title': 'Protein',
-                            'accessor': 'protein',
-                            'recs': """
-                  1oz poultry or beef
-                  2oz fish
-                  1oz most cheese
-                  ¼ cup ricotta or cottage cheese
-                  egg w/ yolk
-                  1-2 tbsp Peanut butter
-                  ½ cup tofu
-                  ½ patty veggie burger
-                            """
-                          },
-                          {'title': 'Starch', 'accessor': 'starch'},
-                          {'title': 'Veg', 'accessor': 'veg'},
-                          {'title': 'Fruit/Veg', 'accessor': 'fruitOrVeg'},
-                          {'title': 'Fats', 'accessor': 'fats'},
-                          {'title': 'Dairy', 'accessor': 'dairy'},
-                        ]
+                        children: nutrients
                             .where((nutrient) =>
-                                this.mealSpec.plan[nutrient['accessor']] !=
-                                null)
+                                this.mealSpec.plan[nutrient.accessor] != null)
                             .map((nutrient) => ServingCheckboxRow(
-                                  recs: nutrient['recs'] ?? 'yolo',
-                                  title: nutrient['title'],
-                                  counts:
-                                      this.mealSpec.plan[nutrient['accessor']],
+                                  recs: nutrient.recs,
+                                  title: nutrient.title,
+                                  counts: this.mealSpec.plan[nutrient.accessor],
                                   onChange: (int newCount) {
                                     meal.update(this.mealSpec.name,
-                                        {nutrient['accessor']: newCount});
+                                        {nutrient.accessor: newCount});
                                   },
                                   color: this.mealSpec.color,
                                   value: meal.entry[this.mealSpec.name] != null
                                       ? meal.entry[this.mealSpec.name]
-                                          [nutrient['accessor']]
+                                          [nutrient.accessor]
                                       : null,
                                 ))
                             .toList(),
@@ -222,7 +259,8 @@ class ServingCheckboxRow extends StatelessWidget {
                     builder: (context) => Dialog(
                         child: Container(
                             padding: EdgeInsets.all(20),
-                            child: Text(this.recs))));
+                            child: Text(this.recs,
+                                style: TextStyle(fontSize: 18, height: 1.5)))));
               })),
       ...List.generate(this.counts.needed + this.counts.optional, (ix) {
         var optional = ix >= this.counts.needed;

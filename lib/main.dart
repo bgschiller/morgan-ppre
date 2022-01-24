@@ -1,4 +1,3 @@
-import 'package:morgan_ppre/exercise.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/cupertino.dart';
@@ -70,48 +69,50 @@ class MyHomePage extends StatelessWidget {
             )),
             Container(
                 margin: EdgeInsets.all(20),
-                child: Row(children: <Widget>[
-                  Consumer<MealModel>(
-                      builder: (context, meal, child) => Row(children: <Widget>[
-                            Container(
-                                padding: EdgeInsets.only(left: 7, top: 14),
-                                alignment: Alignment.center,
-                                child: Text(
-                                  meal.entry != null
-                                      ? meal.entry.numGlassesOfWater.toString()
-                                      : '',
-                                  style: TextStyle(
-                                      color: Colors.blue, fontSize: 24),
-                                  textAlign: TextAlign.center,
-                                )),
-                            IconButton(
-                              icon: Icon(PpreIcons.water_drop,
-                                  color: Colors.blue, size: 40),
-                              onPressed: () {
-                                meal.updateNumGlassesOfWater(
-                                    (meal.entry.numGlassesOfWater + 1) % 13);
-                              },
-                              alignment: Alignment.topLeft,
-                            ),
-                          ])),
-                  Spacer(),
-                  FlatButton(
-                    child: Row(children: [
-                      Icon(Icons.star, color: Colors.white),
-                      Container(
-                          child: Text("Exercise"),
-                          margin: EdgeInsets.only(left: 10)),
-                    ]),
-                    textColor: Colors.white,
-                    color: Colors.deepPurple,
-                    onPressed: () {
-                      Navigator.push(
-                          context,
-                          CupertinoPageRoute(
-                              builder: (context) => ExercisePage()));
-                    },
-                  )
-                ]))
+                child: Consumer<MealModel>(
+                    builder: (context, meal, child) => Row(children: <Widget>[
+                          Container(
+                              padding: EdgeInsets.only(left: 7, top: 14),
+                              alignment: Alignment.center,
+                              child: Text(
+                                meal.entry != null
+                                    ? meal.entry.numGlassesOfWater.toString()
+                                    : '',
+                                style:
+                                    TextStyle(color: Colors.blue, fontSize: 24),
+                                textAlign: TextAlign.center,
+                              )),
+                          IconButton(
+                            icon: Icon(PpreIcons.water_drop,
+                                color: Colors.blue, size: 40),
+                            onPressed: () {
+                              meal.updateNumGlassesOfWater((meal.entry != null
+                                      ? meal.entry.numGlassesOfWater + 1
+                                      : 1) %
+                                  13);
+                            },
+                            alignment: Alignment.topLeft,
+                          ),
+                          Spacer(),
+                          FlatButton(
+                            child: Row(children: [
+                              Icon(Icons.star,
+                                  color: meal != null &&
+                                          meal.entry != null &&
+                                          meal.entry.exercise == 1
+                                      ? Colors.amber
+                                      : Colors.white),
+                              Container(
+                                  child: Text("Exercise"),
+                                  margin: EdgeInsets.only(left: 10)),
+                            ]),
+                            textColor: Colors.white,
+                            color: Colors.deepPurple,
+                            onPressed: () {
+                              meal.toggleExercise();
+                            },
+                          )
+                        ])))
           ],
         ),
       ),

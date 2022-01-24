@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:morgan_ppre/debounce.dart';
@@ -17,7 +18,7 @@ class DiaryEntry {
   Meal dinner;
   Meal eveningSnack;
 
-  String exercises;
+  int exercise;
 
   DiaryEntry({this.day = '', this.numGlassesOfWater = 0})
       : breakfast = Meal('breakfast'),
@@ -26,7 +27,7 @@ class DiaryEntry {
         afternoonSnack = Meal('afternoon_snack'),
         dinner = Meal('dinner'),
         eveningSnack = Meal('evening_snack'),
-        exercises = '';
+        exercise = 0;
 
   DiaryEntry.fromJson(Map<String, dynamic> json)
       : day = json['day'],
@@ -37,7 +38,7 @@ class DiaryEntry {
         afternoonSnack = Meal.fromJson(jsonDecode(json['afternoon_snack'])),
         dinner = Meal.fromJson(jsonDecode(json['dinner'])),
         eveningSnack = Meal.fromJson(jsonDecode(json['evening_snack'])),
-        exercises = json['exercises'];
+        exercise = json['exercise'];
 
   Map<String, dynamic> toMap() {
     return {
@@ -49,7 +50,7 @@ class DiaryEntry {
       'afternoon_snack': jsonEncode(afternoonSnack.toMap()),
       'dinner': jsonEncode(dinner.toMap()),
       'evening_snack': jsonEncode(eveningSnack.toMap()),
-      'exercises': exercises,
+      'exercise': exercise,
     };
   }
 
@@ -150,7 +151,7 @@ class Meal {
 
 Future<Database> getDb() async {
   var dbPath = join(await getDatabasesPath(), 'food_diary.db');
-  return openDatabase(dbPath, version: 1, onCreate: (db, version) {
+  return openDatabase(dbPath, version: 3, onCreate: (db, version) {
     return db.execute('''
         CREATE TABLE diary_entries(
           day TEXT PRIMARY KEY,
@@ -163,13 +164,26 @@ Future<Database> getDb() async {
           dinner TEXT NOT NULL,
           evening_snack TEXT NOT NULL,
 
-          exercises TEXT NOT NULL
+          exercise INTEGER NOT NULL DEFAULT (0)
         );
       ''');
   }, onUpgrade: (db, version, otherVersionNotSureWhichIsNew) {
-    return db.execute('''
-      ALTER TABLE diary_entries ADD COLUMN morning_snack TEXT NOT NULL;
-  ''');
+    return db
+        .execute("DROP TABLE diary_entries")
+        .then((_unused) => db.execute('''
+    CREATE TABLE diary_entries(
+          day TEXT PRIMARY KEY,
+          num_glasses_of_water INTEGER NOT NULL DEFAULT (0),
+
+          breakfast TEXT NOT NULL,
+          morning_snack TEXT NOT NULL,
+          lunch TEXT NOT NULL,
+          afternoon_snack TEXT NOT NULL,
+          dinner TEXT NOT NULL,
+          evening_snack TEXT NOT NULL,
+
+          exercise INTEGER NOT NULL DEFAULT (1)
+        );  '''));
   });
 }
 
@@ -200,6 +214,7 @@ class MealModel extends ChangeNotifier {
       _db = db;
     });
     dbp.then(getTodaysEntry).then((ntry) {
+      log("assigning entry now");
       entry = ntry;
       notifyListeners(skipSave: true);
     });
@@ -232,8 +247,8 @@ class MealModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setExercise(String exercise) {
-    entry.exercises = exercise;
+  void toggleExercise() {
+    entry.exercise = entry.exercise == 1 ? 0 : 1;
     notifyListeners();
   }
 }
